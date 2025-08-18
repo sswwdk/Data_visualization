@@ -1,0 +1,13 @@
+{
+    "editor.tokenColorCustomizations": {
+    "textMateRules": [
+        {
+            "scope": "comment",
+            "settings": {
+                "foreground": "#FF6B6B"  // 원하는 색상 HEX 코드
+            }
+        }
+    ]
+}
+
+}
