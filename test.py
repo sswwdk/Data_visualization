@@ -1,122 +1,225 @@
 import streamlit as st
-import pandas as pd
-import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
-import plotly.express as px
+import folium
+from streamlit_folium import st_folium
 
-st.title("CSV 파일 업로드 & 동적 그래프 시각화")
-
-# 1. 파일 업로드
-file = st.file_uploader("CSV 파일 업로드", type=["csv"])
-
-if file is not None:
-    # 2. 데이터 불러오기
-    df = pd.read_csv(file)
-    st.write("### 데이터 미리보기")
-    st.dataframe(df)
-
-    # 3. 컬럼 선택
-    columns = df.columns.tolist()
-    x_axis = st.selectbox("X축 컬럼 선택", options=columns)
-    numeric_cols = df.select_dtypes(include=["int64", "float64"]).columns.tolist()
-    y_axis = st.selectbox("Y축 컬럼 선택 (수치형)", options=numeric_cols)
-
-    # 4. X축이 날짜형이면 단위 선택 옵션 제공
-    # 원본 데이터프레임의 복사본을 만들어 날짜 변환을 시도합니다.
-    df_copy = df.copy()
-    try:
-        df_copy[x_axis] = pd.to_datetime(df_copy[x_axis])
-    except Exception:
-        pass
-
-    if pd.api.types.is_datetime64_any_dtype(df_copy[x_axis]):
-        st.info(f"'{x_axis}' 컬럼은 날짜 데이터로 인식되었습니다.")
-        group_option = st.radio("날짜 단위 선택", ["일", "월", "연"], horizontal=True)
-
-        if group_option == "일":
-            df["X_axis_grouped"] = df_copy[x_axis].dt.strftime('%Y-%m-%d')
-        elif group_option == "월":
-            df["X_axis_grouped"] = df_copy[x_axis].dt.to_period('M').astype(str)
-        else:  # 연 단위
-            df["X_axis_grouped"] = df_copy[x_axis].dt.to_period('Y').astype(str)
-
-        x_axis_display = "X_axis_grouped" # 그룹화된 컬럼으로 교체
+def format_money(amount):
+    """숫자를 '억' 단위와 '만원'으로 포맷팅"""
+    if amount >= 10000:
+        억 = amount // 10000
+        만 = amount % 10000
+        if 만 == 0:
+            return f'{억}억'
+        else:
+            return f'{억}억 {만}만원'
     else:
-        x_axis_display = x_axis # 원본 컬럼 사용
+        return f'{amount}만원'
+    
+# option_tab_1() 함수 선언
+def option_tab_1():
+    tab1, tab2, tab3 = st.tabs(['구조', '층 수 옵션', '전용 면적'])
+    # Tab 1: 구조
+    with tab1:
+        # 2x2 그리드 만들기
+        col1, col2 = st.columns(2)
+        col3, col4 = st.columns(2)
 
-    # 5. Y축 값 보정 옵션 (로그/제곱근)
-    scale_option = st.radio("Y축 스케일링 방법", ["원본", "로그 변환", "제곱근 변환"], horizontal=True)
+        with col1:
+            if st.button("전체"):
+                st.session_state['selected'] = "전체"
 
-    if scale_option == "로그 변환":
-        df["Y_axis_scaled"] = np.log1p(df[y_axis])  # log(1+x)
-        y_axis_label = f"log(1+{y_axis})"
-    elif scale_option == "제곱근 변환":
-        df["Y_axis_scaled"] = np.sqrt(df[y_axis].clip(lower=0))  # 음수 방지
-        y_axis_label = f"sqrt({y_axis})"
-    else:
-        df["Y_axis_scaled"] = df[y_axis]
-        y_axis_label = y_axis
+        with col2:
+            if st.button("오픈형\n(방1)"):
+                st.session_state['selected'] = "오픈형"
 
-    # 6. 그래프 종류 선택
-    chart_type = st.radio("그래프 종류 선택", options=["Box Plot", "Scatter", "Bar"], horizontal=True)
+        with col3:
+            if st.button("분리형\n(방1, 거실1)"):
+                st.session_state['selected'] = "분리형"
 
-    # 7. 그래프 생성
-    # y축에 표시될 이름을 y_axis_label 변수로 지정합니다.
-    labels = {x_axis_display: x_axis, "Y_axis_scaled": y_axis_label}
+        with col4:
+            if st.button("복층형"):
+                st.session_state['selected'] = "복층형"
+                
+        # 선택한 버튼 표시
+        selected = st.session_state.get('selected', "선택 없음")
+        st.write(f"선택한 타입: {selected}")
 
-    if chart_type == "Box Plot":
-        fig = px.box(df, x=x_axis_display, y="Y_axis_scaled", title=f"Box Plot: {y_axis_label} by {x_axis}", labels=labels)
-    elif chart_type == "Scatter":
-        fig = px.scatter(df, x=x_axis_display, y="Y_axis_scaled", title=f"Scatter Plot: {y_axis_label} vs {x_axis}", labels=labels)
-    elif chart_type == "Bar":
-        # Bar 차트는 집계가 필요할 수 있으므로, 여기서는 평균값을 사용합니다.
-        # 사용 사례에 맞게 sum(), count() 등으로 변경할 수 있습니다.
-        grouped_df = df.groupby(x_axis_display)["Y_axis_scaled"].mean().reset_index()
-        fig = px.bar(grouped_df, x=x_axis_display, y="Y_axis_scaled", title=f"Bar Plot: {y_axis_label} by {x_axis}", labels=labels)
+    # Tab 2: 층 수 옵션
+    with tab2:
+        col1, col2 = st.columns(2)
+        col3, col4 = st.columns(2)
 
-    # 8. Streamlit에 표시
-    st.plotly_chart(fig, use_container_width=True)
+        with col1:
+            if st.button("전체", key="tab2_전체"):
+                st.session_state['selected_floor'] = "전체"
+        with col2:
+            if st.button("지상층", key="tab2_지상층"):
+                st.session_state['selected_floor'] = "지상층"
+        with col3:
+            if st.button("반지하", key="tab2_반지하"):
+                st.session_state['selected_floor'] = "반지하"
+        with col4:
+            if st.button("옥탑", key="tab2_옥탑"):
+                st.session_state['selected_floor'] = "옥탑"
 
-###############################################################
-st.divider()
-###############################################################
+        selected = st.session_state.get('selected_floor', "선택 없음")
+        st.write(f"선택한 층: {selected}")
 
-st.title('Tips Data')
-df = sns.load_dataset('tips')
+    # Tab 3: 전용 면적
+    with tab3:
+        # 2x4 배열: 8개 버튼
+        col1, col2, col3, col4 = st.columns(4)
+        col5, col6, col7, col8 = st.columns(4)
 
-# 위젯을 활용한 interactive 그래프 표현
-x_options = ['day','size']
-y_options = ['total_bill','tip']
-hue_options = ['smoker','sex']
+        area_buttons = ["전체", "10평 이하", "10평대", "20평대",
+                        "30평대", "40평대", "50평대", "60평 이상"]
 
-x_option = st.selectbox(
-    'Select X-axis',
-    index=None,
-    options=x_options
-)
+        keys = ["tab3_"+btn for btn in area_buttons]
 
-y_option = st.selectbox(
-    'Select Y-axis',
-    index=None,
-    options=y_options
-)
+        # 첫 줄
+        for col, btn, key in zip([col1, col2, col3, col4], area_buttons[:4], keys[:4]):
+            if col.button(btn, key=key):
+                st.session_state['selected_area'] = btn
 
-hue_option = st.selectbox(
-    'Select Hue',
-    index=None,
-    options=hue_options
-)
+        # 두 번째 줄
+        for col, btn, key in zip([col5, col6, col7, col8], area_buttons[4:], keys[4:]):
+            if col.button(btn, key=key):
+                st.session_state['selected_area'] = btn
 
-if (x_option != None) & (y_option != None):
-    if hue_option != None:
-        fig3 = px.box(
-            data_frame=df, x=x_option, y=y_option,
-            color=hue_option, width=500
-        )
-    else:
-        fig3 = px.box(
-            data_frame=df, x=x_option, y=y_option,
-            width=500
-        )
-    st.plotly_chart(fig3)
+        selected = st.session_state.get('selected_area', "선택 없음")
+        st.write(f"선택한 면적: {selected}")
+
+# option_tab_2() 함수 선언
+def option_tab_2():
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        if st.button("에어컨", key="option_에어컨"):
+            st.session_state['selected_option'] = "에어컨"
+
+    with col2:
+        if st.button("냉장고", key="option_냉장고"):
+            st.session_state['selected_option'] = "냉장고"
+
+    with col3:
+        if st.button("세탁기", key="option_세탁기"):
+            st.session_state['selected_option'] = "세탁기"
+
+    selected = st.session_state.get('selected_option', "선택 없음")
+    st.write(f"선택한 옵션: {selected}")
+
+
+st.set_page_config(layout="wide")  # 전체 화면 넓게 사용
+
+# -----------------------------
+# Sidebar
+# -----------------------------
+st.sidebar.title("🔍 검색 필터")
+
+building_types = ['원룸', '투룸', '오피스텔', '아파트']
+selected_types = []
+
+st.sidebar.write("선호하는 건물 유형을 모두 선택하세요:")
+for type in building_types:
+    if st.sidebar.checkbox(type):
+        selected_types.append(type)
+
+st.sidebar.divider()
+
+# 구조 ･ 면적
+with st.sidebar.expander('구조 ･ 면적'):
+    option_tab_1()
+
+# 옵션
+with st.sidebar.expander('옵션'):
+    option_tab_2()
+
+# 주차 가능 토글 버튼
+selected = st.sidebar.toggle('주차 가능만 보기')
+
+
+st.sidebar.divider()
+
+with st.sidebar.expander('전세'):
+    price = st.slider("전세금 (만원)", 1000, 30000, (3000, 1000), step = 200)
+    min_text = format_money(price[0])
+    max_text = format_money(price[1])
+    st.text(f'최소 {min_text} ~ 최대 {max_text}')
+
+with st.sidebar.expander('월세'):
+    price = st.slider("보증금 (만원)", 500, 10000, (2000, 5000), step = 100)
+    min_text = format_money(price[0])
+    max_text = format_money(price[1])
+    st.text(f'최소 {min_text} ~ 최대 {max_text}')
+    
+    price = st.slider("월세 (만원)", 10, 300, (30, 80), step = 10)
+    min_text = format_money(price[0])
+    max_text = format_money(price[1])
+    st.text(f'최소 {min_text} ~ 최대 {max_text}')
+
+col1, col2 = st.sidebar.columns([1, 1.7])
+with col1:
+    if st.button("초기화", use_container_width=True):
+        st.write("초기화 됐습니다.")
+with col2:
+    if st.button("검색", use_container_width=True):
+        st.write("검색 중 입니다!")
+
+
+
+# -----------------------------
+# 상단 네비게이션 바
+# -----------------------------
+st.markdown("""
+    <style>
+    .navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background-color: #2c3e50;
+        color: white;
+        padding: 12px;
+        font-size: 18px;
+        font-weight: bold;
+        z-index: 1000;
+        text-align: center;
+    }
+    .stApp {
+        margin-top: 60px;
+    }
+    div.stButton > button:last-child {
+    background-color: #33C3FF;
+    color: white;
+    font-weight: bold;
+    }
+    .button-grid button {
+    height: 100px;
+    width: 100%;
+    font-size: 18px;
+    margin: 5px 0;
+    }
+    .button-grid .selected {
+        background-color: #4CAF50;
+        color: white;
+    }
+    .button-grid .not-selected {
+        background-color: #f0f0f0;
+        color: black;
+    }
+    </style>
+    <div class="navbar">🌎방구🌎 | 원룸 매물 검색 어플 | 셀렉 </div>
+""", unsafe_allow_html=True)
+
+# -----------------------------
+# Folium 지도
+# -----------------------------
+# 지도 생성
+m = folium.Map(location=[37.513083, 126.938559], zoom_start=16)
+
+# 마커 추가 예시
+loc=[37.5662952, 126.9779451] #위도,경도 #위도,경도
+folium.Marker(location=loc).add_to(m)
+
+
+# Streamlit에 표시
+st_folium(m, use_container_width=True, height=800)
