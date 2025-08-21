@@ -66,3 +66,28 @@ st.header('탭 추가')
 st.header('익스팬더 추가')
 with st.expander('숨긴 영역'):
     st.write('여기는 보이지 않습니다. 클릭해야 보입니다.')
+
+
+st.divider()
+
+def format_money(amount):
+    """숫자를 '억' 단위와 '만 원'으로 포맷팅하는 함수"""
+    if amount >= 10000:
+        억 = amount // 10000
+        만 = amount % 10000
+        return f'{억}억 {만}만원'
+    else:
+        return f'{amount}만원'
+
+st.title("월세 검색기")
+
+price = st.slider("월세 (만원)", 1000, 100000, (2000, 50000), step = 100)
+
+# 함수를 사용하여 슬라이더 값 포맷팅
+min_text = format_money(price[0])
+if price[1] == 100000:
+    max_text = "1억 이상"
+else:
+    max_text = format_money(price[1])
+
+st.text(f'최소 {min_text} ~ 최대 {max_text}')

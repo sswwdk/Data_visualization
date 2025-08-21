@@ -1,0 +1,12 @@
+/* Sidebar가 열릴 때 Main Page의 크기가 조절되는 것을 방지 */
+.stApp {
+    overflow-x: hidden; /* 가로 스크롤바 방지 */
+}
+
+/* Sidebar의 위치를 절대적으로 설정 */
+.stApp .css-1aumqnq { /* .css-1aumqnq는 사이드바의 CSS 클래스명으로, 버전에 따라 바뀔 수 있으므로 주의 */
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1000; /* Sidebar가 Main Page 위로 오도록 z-index 설정 */
+}
