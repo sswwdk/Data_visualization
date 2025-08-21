@@ -103,7 +103,7 @@ m = folium.Map(location=[37.513083, 126.938559], zoom_start=16)
 # 마커 추가 예시
 loc=[37.5662952, 126.9779451] #위도,경도 #위도,경도
 folium.Marker(location=loc).add_to(m)
-m
+
 
 # Streamlit에 표시
 st_folium(m, use_container_width=True, height=800)
