@@ -7,33 +7,6 @@ import folium
 from streamlit_folium import st_folium
 import time
 
-
-st.set_page_config(page_title='0827TEST') 
-# -------------------- 공통 헤더 --------------------
-def app_header(image='raw.png',title="🌎방구🌎 | 원룸 매물 검색 어플"):
-    st.markdown(f"""
-        <style>
-        .navbar {{
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background-color: #fffff;
-            color: black;
-            padding: 12px;
-            font-size: 18px;
-            font-weight: bold;
-            z-index: 1000;
-            text-align: left;
-        }}
-        .stApp {{
-            margin-top: 60px; /* 네비게이션 바 높이만큼 상단 여백 추가 */
-        }}
-        </style>
-        <div class="navbar">{title}</div>
-    """, unsafe_allow_html=True)
-
-# -------------------- 버튼 스타일 --------------------
 st.markdown("""
 <style>
 /* 모든 기본 버튼에 연한 살구색 배경 */
@@ -46,23 +19,32 @@ div.stButton > button {
   height: 40px;
   transition: all 0.2s ease;
 }
+
+/* 버튼 호버 효과 (채도 더 어둡게) */
 div.stButton > button:hover {
   background: #ffb89f !important;
   border: 1px solid #ff9d7a !important;
 }
+
+/* 버튼 클릭/활성 효과 (더 어둡게) */
 div.stButton > button:active {
   background: #ff9d7a !important;
   border: 1px solid #ff8355 !important;
 }
+
 /* 게스트 버튼 (회색) */
 button[kind="secondary"] { 
   background: #ddd !important; 
   border-color: #d0d0d0 !important; 
 }
+
+/* 게스트 버튼 호버 효과 (짙은 회색) */
 button[kind="secondary"]:hover { 
   background: #888 !important; 
   border-color: #777 !important; 
 }
+
+/* 게스트 버튼 클릭 효과 */
 button[kind="secondary"]:active { 
   background: #666 !important; 
   border-color: #555 !important; 
@@ -80,7 +62,6 @@ def go(step: str):
 
 # -------------------- 페이지 정의 --------------------
 def page_home():
-    app_header("🌎방구🌎 | 메인 페이지")
     st.markdown(
         """
         <div style="text-align:center; padding: 60px 0 40px 0;">
@@ -91,56 +72,78 @@ def page_home():
         unsafe_allow_html=True
     )
     
+    # wide 레이아웃에서도 가운데 정렬되도록 더 넓은 여백 사용
     col1, col2, col3 = st.columns([2, 3, 2])
+    
     with col2:
+        # 로그인, 회원가입 버튼 (같은 줄에 균등하게)
         login_col, signup_col = st.columns(2, gap="medium")
+        
         with login_col:
             if st.button("로그인", key="home_login", type="primary", use_container_width=True):
                 go("로그인")
+        
         with signup_col:
             if st.button("회원가입", key="home_signup", type="primary", use_container_width=True):
                 go("회원가입")
+        
+        # 간격 추가
         st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+        
+        # 게스트 버튼 (정중앙에 적당한 크기로)
         guest_col1, guest_col2, guest_col3 = st.columns([0.5, 1, 0.5])
         with guest_col2:
             if st.button("게스트로 이용", key="home_guest", type="secondary", use_container_width=True):
+                # 게스트 모드로 설정하고 알림 후 셀렉으로 이동
                 st.session_state["guest_mode"] = True
                 st.info("게스트로 이용 시 일부 기능이 제한됩니다")
                 time.sleep(1.5)
                 go("셀렉")
 
 def page_signup():
-    app_header("🌎방구🌎 | 회원가입")
     st.header("회원가입")
     st.text_input("아이디", key="su_id")
     st.text_input("비밀번호", type="password", key="su_pw")
     st.text_input("닉네임", key="su_nick")
     birth = st.date_input("생일", value=datetime.date(2000, 1, 1), key="su_birth")
     st.selectbox("성별", ["성별 선택", "남성", "여성", "기타/응답안함"], key="su_gender")
+
+    # 회원가입 완료 버튼을 성별 선택 바로 아래에 배치
     if st.button("회원가입", key="signup_submit", type="primary", use_container_width=True):
         st.success(f"회원가입 완료! 선택한 생일: {birth}")
-        st.session_state["guest_mode"] = False
+        st.session_state["guest_mode"] = False  # 회원가입 후엔 게스트 모드 해제
         go("셀렉")
+    
+    # 간격 추가
     st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+    
+    # 뒤로가기 버튼을 왼쪽에 배치
     col1, col2, col3 = st.columns([1, 2, 2])
     with col1:
         if st.button("뒤로가기", key="signup_back"):
             go("메인")
 
 def page_login():
-    app_header("🌎방구🌎 | 로그인")
     st.header("로그인")
     st.text_input("아이디", key="li_id")
     st.text_input("비밀번호", type="password", key="li_pw")
+
+    # 로그인 버튼을 비밀번호 바로 아래에 배치
     if st.button("로그인", key="login_submit", type="primary", use_container_width=True):
         st.success("로그인 성공 (데모)")
-        st.session_state["guest_mode"] = False
+        st.session_state["guest_mode"] = False  # 로그인 후엔 게스트 모드 해제
         go("셀렉")
+    
+    # 간격 추가
     st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+    
+    # 뒤로가기 버튼을 왼쪽에 배치
     col1, col2, col3 = st.columns([1, 2, 2])
     with col1:
         if st.button("뒤로가기", key="login_back"):
             go("메인")
+
+    # 아이디/비밀번호 찾기 링크
     st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
     st.markdown(
         """
@@ -154,10 +157,35 @@ def page_login():
     )
 
 def page_guest():
+    # 이제 이 페이지는 사용하지 않음 - 바로 셀렉으로 이동
     go("셀렉")
 
+# -------------------- 셀렉 페이지 (매물 내용) --------------------
 def page_select():
-    app_header("🌎방구🌎 | 원룸 매물 검색")
+    # --- CSS 스타일 ---
+# 상단 네비게이션 바 및 기타 UI 요소 스타일링
+    st.markdown("""
+        <style>
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #2c3e50;
+            color: white;
+            padding: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 1000;
+            text-align: center;
+        }
+        .stApp {
+            margin-top: 60px; /* 네비게이션 바 높이만큼 상단 여백 추가 */
+        }
+        </style>
+        <div class="navbar">🌎방구🌎 | 원룸 매물 검색 어플</div>
+    """, unsafe_allow_html=True)
+    # --- 샘플 데이터 ---
     properties = [
         {
             "id": 1,
@@ -194,9 +222,12 @@ def page_select():
             "etc": "화재경보기"
         }
     ]
+
+    # --- 사이드바 UI ---
     st.set_page_config(layout="wide")
     st.sidebar.markdown("## 🏠 매물 리스트")
     st.sidebar.markdown("---")
+
     if not properties:
         st.sidebar.warning("표시할 매물이 없습니다.")
     else:
@@ -204,22 +235,29 @@ def page_select():
             with st.sidebar.container(border=True):
                 st.markdown(f"#### {prop['title']}")
                 st.caption(f"{prop['address']}")
+
                 col1, col2 = st.columns(2)
                 col1.text(f"거래: {prop['transaction']}")
                 col2.text(f"관리비: {prop['management_fee']}")
+
                 col1, col2 = st.columns(2)
                 col1.text(f"면적: {prop['area']}")
                 col2.text(f"층/구조: {prop['floor']} / {prop['type']}")
+
                 with st.expander("상세 정보 보기"):
                     st.write(f"**방향:** {prop['direction']}")
                     st.write(f"**난방/냉방:** {prop['heating']} / {prop['cooling']}")
                     st.write(f"**생활시설:** {prop['living_facilities']}")
                     st.write(f"**보안:** {prop['security']}")
                     st.write(f"**기타:** {prop['etc']}")
+
+    # --- 메인 화면 (지도) ---
     map_center = [37.513083, 126.938559]
     if properties:
         map_center = [properties[0]['lat'], properties[0]['lon']]
+
     m = folium.Map(location=map_center, zoom_start=15)
+
     for prop in properties:
         popup_html = f"""
         <b>{prop['title']}</b><br>
@@ -231,9 +269,13 @@ def page_select():
             [prop['lat'], prop['lon']], 
             popup=folium.Popup(popup_html, max_width=300)
         ).add_to(m)
+
     st_folium(m, use_container_width=True, height=800)
+        
     if st.button("뒤로가기"):
+        st.set_page_config(layout="centered")
         go("메인")
+
 
 # -------------------- 라우팅 --------------------
 page = st.session_state["step"]

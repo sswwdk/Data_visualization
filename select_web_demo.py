@@ -151,7 +151,7 @@ def option_tab_2():
     st.write(f"선택한 옵션: {selected}")
 
 
-st.set_page_config(layout="wide")  # 전체 화면 넓게 사용
+st.set_page_config(page_title='방구', layout="wide")  # 전체 화면 넓게 사용
 
 # 사이드 바
 st.sidebar.title("🔍 검색 필터")
