@@ -1,3 +1,7 @@
+#allow
+!room_data_export.csv
+!raw.png
+
 # ignore
 **/data/
 

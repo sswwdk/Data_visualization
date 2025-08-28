@@ -28,17 +28,6 @@ st.markdown("""
     .stApp {
         margin-top: 60px; /* 네비게이션 바 높이만큼 상단 여백 추가 */
     }
-    div.stButton > button:last-child {
-        background-color: #33C3FF;
-        color: white;
-        font-weight: bold;
-    }
-    .button-grid button {
-        height: 100px;
-        width: 100%;
-        font-size: 18px;
-        margin: 5px 0;
-    }
     </style>
     <div class="navbar">🌎방구🌎 | 원룸 매물 검색 어플</div>
 """, unsafe_allow_html=True)

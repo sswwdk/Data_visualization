@@ -10,7 +10,7 @@ import time
 
 st.set_page_config(page_title='0827TEST') 
 # -------------------- 공통 헤더 --------------------
-def app_header(image='raw.png',title="🌎방구🌎 | 원룸 매물 검색 어플"):
+def app_header(title="🌎방구🌎 | 원룸 매물 검색 어플"):
     st.markdown(f"""
         <style>
         .navbar {{
