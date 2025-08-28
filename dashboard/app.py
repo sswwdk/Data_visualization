@@ -27,8 +27,9 @@ except FileNotFoundError:
 
 # 데이터프레임의 컬럼에서 연도 목록을 추출합니다. ('자치구별' 제외)
 year_list = df_year.columns[1:].tolist()
-# 사용 가능한 색상 맵 리스트
-color_map_list = ['YlOrRd', 'YlGnBu', 'BuPu', 'GnBu', 'PuRd', 'RdPu', 'OrRd', 'BuGn', 'YlGn']
+
+# 사용 가능한 색상 맵 리스트 (낮은 값=초록, 높은 값=빨강을 위해 RdYlGn_r 추가)
+color_map_list = ['RdYlGn_r', 'YlOrRd', 'YlGnBu', 'BuPu', 'GnBu', 'PuRd', 'RdPu', 'OrRd', 'BuGn', 'YlGn']
 
 
 # st.columns를 사용하여 선택 박스를 가로로 나란히 배치합니다.
@@ -44,9 +45,12 @@ with col1:
 
 with col2:
     # 히트맵 색상을 선택할 수 있는 selectbox를 생성합니다.
+    # 기본값을 'RdYlGn_r'로 설정하여 낮은 값은 초록색, 높은 값은 빨간색으로 표시
+    default_color_index = color_map_list.index('RdYlGn_r')
     selected_color = st.selectbox(
         '히트맵 색상을 선택하세요',
-        color_map_list
+        color_map_list,
+        index=default_color_index
     )
 
 
